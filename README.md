@@ -12,6 +12,7 @@ GnX App es una PWA local con un monitor Windows Rust. La documentación pública
 - [Operación](docs/operations.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Recursos y referencias](docs/resources.md)
+- [Auditoría de la documentación](docs/documentation-audit.md)
 
 La experiencia editorial toma como referencia [GitBook de GnX](https://gnx.gitbook.io/docs) y el contexto externo de [gnx-obsidiana](https://gnx-obsidiana.mayas-alas-yx.chatgpt.site/). Son referencias de lectura, no dependencias de ejecución.
 

@@ -26,6 +26,8 @@
       url: /installer-worklog/
 - title: Contexto
   items:
+    - title: Auditoría de la documentación
+      url: /documentation-audit/
     - title: Recursos y referencias
       url: /resources/
     - title: Roadmap

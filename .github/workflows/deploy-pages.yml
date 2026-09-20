@@ -30,12 +30,14 @@ jobs:
           test -f docs/_layouts/default.html
           test -f docs/_data/navigation.yml
           test -f docs/assets/docs.css
+          test -f docs/documentation-audit.md
           if rg -n --hidden --glob '!_site/**' '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16}|api[_-]?key[[:space:]]*[:=])' docs; then
             echo 'Se detectó un patrón que podría ser un secreto en docs.' >&2
             exit 1
           fi
 
       - name: Configurar GitHub Pages
+        id: pages
         uses: actions/configure-pages@v5
 
       - name: Renderizar Markdown con Jekyll
@@ -43,6 +45,12 @@ jobs:
         with:
           source: docs
           destination: _site
+
+      - name: Validar enlaces internos
+        shell: bash
+        env:
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: node .github/scripts/check-doc-links.mjs _site
 
       - name: Comprobar artefacto sin runtime
         shell: bash

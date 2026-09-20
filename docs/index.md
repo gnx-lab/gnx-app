@@ -34,7 +34,7 @@ GnX App es una PWA local conectada a un servicio Windows de monitorización. Est
 
 El contexto editorial externo vive en <a href="https://gnx-obsidiana.mayas-alas-yx.chatgpt.site/" target="_blank" rel="noopener noreferrer">gnx-obsidiana.mayas-alas-yx.chatgpt.site</a>. Es una referencia de exploración y no es un backend, un canal de autenticación ni una dependencia operativa de GnX App.
 
-Para comparar la experiencia editorial, consulta <a href="https://gnx.gitbook.io/docs" target="_blank" rel="noopener noreferrer">la documentación GitBook de referencia</a>. Este sitio no copia su contenido: adopta sus mejores patrones de navegación, jerarquía y lectura en una implementación propia dentro de `/docs`.
+Para comparar la experiencia editorial, consulta <a href="https://gnx.gitbook.io/docs" target="_blank" rel="noopener noreferrer">la documentación GitBook de referencia</a>. Este sitio no copia su contenido: adopta sus mejores patrones de navegación, jerarquía y lectura en una implementación propia dentro de `/docs`. La feature entregada y sus criterios están resumidos en la <a href="{{ '/documentation-audit/' | relative_url }}">auditoría de documentación</a>.
 
 ## Estado actual
 

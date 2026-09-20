@@ -1,21 +1,15 @@
 ---
 layout: default
 title: Roadmap
-description: Evolución propuesta, ordenada por evidencia y no por promesas.
-status: Propuesta
+description: Evolución propuesta después de cerrar la feature de documentación.
+status: Producto futuro
 updated: 2026-09-20
 permalink: /roadmap/
 ---
 
-## Ahora: documentación y operación local
+> La feature de documentación ya está cerrada. Consulta la [auditoría de documentación]({{ '/documentation-audit/' | relative_url }}) para ver criterios, evidencia y alcance entregado.
 
-- [x] Publicar únicamente Markdown desde `/docs`.
-- [x] Navegación lateral, búsqueda de navegación y diseño responsive.
-- [x] Documentar la PWA local y el monitor Windows Rust.
-- [x] Marcar por separado evidencia, historial y propuesta.
-- [ ] Añadir validación automática de enlaces internos en CI.
-
-## Después: contrato de conexión
+## Próximo: contrato de conexión
 
 Antes de tocar un botón `Conectar`:
 
@@ -25,13 +19,13 @@ Antes de tocar un botón `Conectar`:
 - [ ] Definir qué datos puede enviar `app.gnx`.
 - [ ] Probar un flujo extremo a extremo sin secretos en logs.
 
-## Más adelante: producto distribuido
+## Producto distribuido
 
 - [ ] Integrar la entrada pública con una API autorizada.
 - [ ] Separar monitor de disponibilidad de health semántico.
 - [ ] Añadir rollback y migración del servicio con evidencia.
 - [ ] Publicar una matriz de compatibilidad de navegador, Windows y runtime.
 
-<div class="callout warning">
-<strong>La prioridad no es añadir más páginas.</strong> La siguiente entrega debe cerrar decisiones y pruebas de la conexión remota antes de presentar `compute.gnx` como una capacidad real.
-</div>
+## Regla de priorización
+
+No se presenta `compute.gnx` como una capacidad real hasta tener contrato, identidad, límites, pruebas autorizadas y evidencia reproducible. La documentación seguirá registrando esos cambios, pero no volverá a cargar una feature terminada como pendiente.
