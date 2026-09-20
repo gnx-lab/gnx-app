@@ -66,8 +66,12 @@
         <ServiceInstall Id="MonitorServiceInstall" Name="GnxAppMonitor" DisplayName="GnX App Monitor"
                         Description="Checks GnX App availability and an optional local install manifest."
                         Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
-        <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+        <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
       </Component>
+      <!-- Self-contained publish includes the runtime and dependency DLLs. -->
+      <Files Include="$(var.ServicePayloadDir)\*.dll" />
+      <Files Include="$(var.ServicePayloadDir)\*.deps.json" />
+      <Files Include="$(var.ServicePayloadDir)\*.runtimeconfig.json" />
     </ComponentGroup>
   </Fragment>
   <?endif?>

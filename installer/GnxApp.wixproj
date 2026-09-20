@@ -1,7 +1,7 @@
 <Project Sdk="WixToolset.Sdk/5.0.2">
   <PropertyGroup>
     <OutputName>GnxAppSetup</OutputName>
-    <AppUrl Condition="'$(AppUrl)' == ''">https://app.gnx</AppUrl>
+    <AppUrl Condition="'$(AppUrl)' == ''">https://gnx-lab.github.io/gnx-app</AppUrl>
     <DefineConstants>AppUrl=$(AppUrl)</DefineConstants>
     <!-- The service payload is opt-in because publish output is not committed. -->
     <IncludeService Condition="'$(IncludeService)' == ''">0</IncludeService>

@@ -24,6 +24,8 @@ public sealed class MonitorWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Let the Windows Service host report Running before the first network check.
+        await Task.Yield();
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(Math.Clamp(settings.IntervalSeconds, 10, 86400)));
         await CheckOnceAsync(stoppingToken);
         while (await timer.WaitForNextTickAsync(stoppingToken))
