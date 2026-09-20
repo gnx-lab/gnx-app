@@ -1,6 +1,8 @@
 **/bin/
 **/obj/
 **/publish/
+**/target/
+_site/
 *.msi
 *.wixpdb
 

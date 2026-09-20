@@ -10,7 +10,7 @@
     <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más reciente instalada." />
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- AppUrl se puede sobreescribir por build; por defecto apunta a la instalación publicada. -->
+    <!-- AppUrl se puede sobreescribir por build; por defecto apunta a la PWA local. -->
     <Property Id="APP_URL" Value="$(var.AppUrl)" />
 
     <StandardDirectory Id="LocalAppDataFolder">
@@ -60,18 +60,14 @@
       <Directory Id="MONITORFOLDER" Name="GnX App Monitor" />
     </StandardDirectory>
     <ComponentGroup Id="MonitorServicePayload" Directory="MONITORFOLDER">
-      <Component Id="MonitorService" Guid="*">
-        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\GnxAppMonitor.exe" KeyPath="yes" />
+      <Component Id="MonitorService" Guid="A31DCE86-7A6F-4C0E-9BE7-8E3D8D6F3A42">
+        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\gnx-app-monitor.exe" KeyPath="yes" />
         <File Id="MonitorSettings" Source="$(var.ServicePayloadDir)\appsettings.json" />
         <ServiceInstall Id="MonitorServiceInstall" Name="GnxAppMonitor" DisplayName="GnX App Monitor"
-                        Description="Checks GnX App availability and an optional local install manifest."
+                        Description="Checks GnX App availability for the local PWA."
                         Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
         <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
       </Component>
-      <!-- Self-contained publish includes the runtime and dependency DLLs. -->
-      <Files Include="$(var.ServicePayloadDir)\*.dll" />
-      <Files Include="$(var.ServicePayloadDir)\*.deps.json" />
-      <Files Include="$(var.ServicePayloadDir)\*.runtimeconfig.json" />
     </ComponentGroup>
   </Fragment>
   <?endif?>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'es' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="{{ page.description | default: site.description | escape }}">
+  <title>{{ page.title | default: site.title }} · {{ site.title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/docs.css' | relative_url }}">
+</head>
+<body>
+  <a class="skip-link" href="#content">Saltar al contenido</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ '/' | relative_url }}" aria-label="GnX Docs, inicio">
+        <span class="brand-mark">G</span>
+        <span><strong>GnX</strong><small>DOCUMENTACIÓN</small></span>
+      </a>
+      <div class="topbar-actions">
+        <a class="top-link" href="https://gnx-obsidiana.mayas-alas-yx.chatgpt.site/" target="_blank" rel="noopener noreferrer">Explorar contexto ↗</a>
+        <a class="top-link" href="https://gnx.gitbook.io/docs" target="_blank" rel="noopener noreferrer">GitBook original ↗</a>
+      </div>
+    </div>
+  </header>
+  <div class="docs-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div class="sidebar-intro">
+        <span class="kicker">GNX / KNOWLEDGE BASE</span>
+        <p>Una guía verificable para entender, ejecutar y operar GnX.</p>
+      </div>
+      <label class="search-box">
+        <span class="sr-only">Filtrar navegación</span>
+        <input id="navSearch" type="search" placeholder="Buscar en la navegación…" autocomplete="off">
+      </label>
+      <nav id="mainNav">
+        {% for section in site.data.navigation %}
+          <div class="nav-section" data-section>
+            <h2>{{ section.title }}</h2>
+            <ul>
+              {% for item in section.items %}
+                <li data-nav-item><a href="{{ item.url | relative_url }}">{{ item.title }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-note">
+        <span class="status-dot"></span>
+        <div><strong>Solo documentación</strong><br><small>Este sitio no ejecuta integraciones ni expone servicios locales.</small></div>
+      </div>
+    </aside>
+    <main id="content" class="content">
+      <div class="breadcrumbs"><a href="{{ '/' | relative_url }}">GnX Docs</a><span>/</span><span>{{ page.title }}</span></div>
+      <div class="page-meta">
+        {% if page.status %}<span class="status-pill">{{ page.status }}</span>{% endif %}
+        {% if page.updated %}<span>Actualizado {{ page.updated }}</span>{% endif %}
+      </div>
+      <article class="prose">
+        {% if page.title %}<h1>{{ page.title }}</h1>{% endif %}
+        {% if page.description %}<p class="lead">{{ page.description }}</p>{% endif %}
+        {{ content }}
+      </article>
+      <footer class="page-footer">
+        <div><strong>GnX Docs</strong><br><span>Fuente viva: este repositorio y su historial verificable.</span></div>
+        <div class="footer-links"><a href="{{ '/resources/' | relative_url }}">Referencias</a><a href="{{ '/' | relative_url }}">Inicio</a></div>
+      </footer>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const input = document.querySelector('#navSearch');
+      const items = [...document.querySelectorAll('[data-nav-item]')];
+      const sections = [...document.querySelectorAll('[data-section]')];
+      if (!input) return;
+      input.addEventListener('input', () => {
+        const query = input.value.trim().toLocaleLowerCase();
+        items.forEach(item => { item.hidden = query && !item.textContent.toLocaleLowerCase().includes(query); });
+        sections.forEach(section => { section.hidden = query && !section.querySelector('[data-nav-item]:not([hidden])'); });
+      });
+    })();
+  </script>
+</body>
+</html>

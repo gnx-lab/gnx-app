@@ -1,4 +1,4 @@
-name: Publicar PWA en GitHub Pages
+name: Publicar GnX Docs en GitHub Pages
 
 on:
   push:
@@ -21,16 +21,41 @@ jobs:
       - name: Obtener el repositorio
         uses: actions/checkout@v4
 
-      - name: Preparar el sitio público
+      - name: Validar fuente docs-only
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _site/assets
-          cp index.html styles.css app.js sw.js manifest.webmanifest _site/
-          cp -R assets/. _site/assets/
+          test -f docs/index.md
+          test -f docs/_config.yml
+          test -f docs/_layouts/default.html
+          test -f docs/_data/navigation.yml
+          test -f docs/assets/docs.css
+          if rg -n --hidden --glob '!_site/**' '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16}|api[_-]?key[[:space:]]*[:=])' docs; then
+            echo 'Se detectó un patrón que podría ser un secreto en docs.' >&2
+            exit 1
+          fi
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Renderizar Markdown con Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: docs
+          destination: _site
+
+      - name: Comprobar artefacto sin runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _site/index.html
+          if find _site -type f \( \
+            -name 'app.js' -o -name 'sw.js' -o -name 'manifest.webmanifest' \
+            -o -name '*.msi' -o -name '*.exe' -o -name '*.dll' \
+          \) -print -quit | grep -q .; then
+            echo 'El artefacto de documentación contiene runtime o instalables.' >&2
+            exit 1
+          fi
 
       - name: Crear artefacto de Pages
         uses: actions/upload-pages-artifact@v3
@@ -47,6 +72,6 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - name: Publicar en GitHub Pages
+      - name: Publicar documentación
         id: deployment
         uses: actions/deploy-pages@v4

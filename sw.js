@@ -1,4 +1,4 @@
-const CACHE = "gnx-app-v5";
+const CACHE = "gnx-app-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,7 +10,6 @@ const APP_SHELL = [
   "./assets/icon-512.png",
   "./assets/tray-icon.ico",
   "./assets/tray-icon.png",
-  "./assets/branding-install-logo.ico",
   "./assets/branding-install-logo.png"
 ];
 

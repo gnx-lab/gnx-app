@@ -1,0 +1,12 @@
+title: GnX Docs
+description: Documentación de producto, operación y arquitectura de GnX App
+lang: es
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+encoding: utf-8
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - node_modules

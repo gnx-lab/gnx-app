@@ -1,0 +1,32 @@
+- title: Empieza aquí
+  items:
+    - title: Visión general
+      url: /
+    - title: Inicio rápido
+      url: /quickstart/
+    - title: Mapa del producto
+      url: /product-flow/
+- title: Entiende GnX
+  items:
+    - title: Arquitectura
+      url: /architecture/
+    - title: Seguridad y límites
+      url: /security/
+    - title: Decisiones y estado
+      url: /reference/
+- title: Opera y resuelve
+  items:
+    - title: Operación
+      url: /operations/
+    - title: Troubleshooting
+      url: /troubleshooting/
+    - title: Despliegue local
+      url: /deployment/
+    - title: Instalador Windows
+      url: /installer-worklog/
+- title: Contexto
+  items:
+    - title: Recursos y referencias
+      url: /resources/
+    - title: Roadmap
+      url: /roadmap/

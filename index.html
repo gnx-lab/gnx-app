@@ -14,24 +14,24 @@
   <main class="app">
     <section class="card" aria-labelledby="appTitle">
       <img class="hero" src="assets/tray-icon.png" alt="Icono de GnX App">
-      <span id="modeBadge" class="badge">Cargando</span>
+      <span id="modeBadge" class="badge">Local</span>
       <h1 id="appTitle">GnX App</h1>
-      <p id="intro">Comprobando el entorno de ejecución.</p>
+      <p id="intro">PWA local. La operación real se ejecuta en localhost.</p>
 
       <section class="panel" aria-live="polite">
-        <div class="row"><span>Sesión</span><strong id="sessionState">No iniciada</strong></div>
+        <div class="row"><span>Sesión</span><strong id="sessionState">No generada</strong></div>
         <div class="row"><span>PWA</span><strong id="pwaState">No verificada</strong></div>
-        <div class="row private-only"><span>Fuentes</span><strong id="sourcesState">No comprobadas</strong></div>
+        <div id="serviceRow" class="row" hidden><span>Servicio local</span><strong id="serviceState">No conectado</strong></div>
       </section>
 
       <div class="actions">
         <button id="sessionBtn" type="button">Generar sesión</button>
         <button id="installBtn" type="button" hidden>Instalar PWA</button>
-        <button id="verifyBtn" class="ghost" type="button">Verificar instalación</button>
+        <button id="verifyBtn" class="ghost" type="button">Verificar PWA</button>
       </div>
 
       <label id="handoffLabel" class="handoff" hidden>
-        Código de sesión para localhost
+        Código de sesión
         <input id="handoffCode" readonly aria-label="Código de sesión">
       </label>
       <p id="status" class="status" role="status">Listo.</p>
