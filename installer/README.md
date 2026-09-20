@@ -1,6 +1,6 @@
 # Instalador de GnX App para Windows (WiX Toolset 5)
 
-Este proyecto genera un MSI **solo con accesos directos** a la aplicación web publicada. No contiene un servidor, no empaqueta `localhost` y no convierte la aplicación web en una aplicación nativa. Los accesos de Inicio y escritorio abren la URL configurada en el navegador.
+Este proyecto genera un MSI con accesos directos a la aplicación web publicada y, mediante `build-installer.ps1`, incluye el monitor Windows opcional. No contiene un servidor, no empaqueta `localhost` y no convierte la aplicación web en una aplicación nativa. Los accesos de Inicio y escritorio abren la URL configurada en el navegador.
 
 ## Requisitos
 
@@ -41,7 +41,7 @@ El build genera el MSI correctamente, con 0 advertencias y 0 errores. El MSI gen
 
 El servicio registra resultados en el Event Log/host de Windows y detiene sus comprobaciones de forma cooperativa. Una URL no disponible o un hash incorrecto se registra como diagnóstico; el servicio no repara archivos, no autentica usuarios y no garantiza que un servidor remoto esté sano más allá de la respuesta HTTP. Si no existe el manifiesto configurado, se registra una advertencia y se continúa.
 
-Para publicar y registrar el servicio, desde una consola PowerShell **elevada**:
+Para publicar y registrar el servicio manualmente, desde una consola PowerShell **elevada**:
 
 ```powershell
 dotnet publish installer\service\GnxApp.Monitor.csproj -c Release -r win-x64 --self-contained false -o installer\service\publish
