@@ -2,7 +2,7 @@
 set -euo pipefail
 
 quadlet_dir=/etc/containers/systemd
-quadlet_file="$quadlet_dir/gnx-linux.container"
+quadlet_file="$quadlet_dir/gnx-mesh.container"
 wsl_conf=/etc/wsl.conf
 image="${GNX_LINUX_IMAGE:-docker.io/library/alpine:3.20}"
 
@@ -30,20 +30,20 @@ fi
 
 mkdir -p "$quadlet_dir"
 cat > "$quadlet_file" <<UNIT
-# Managed by GnX. The systemd generator turns this Quadlet into gnx-linux.service.
+# Managed by GnX Mesh. The systemd generator turns this Quadlet into gnx-mesh.service.
 [Unit]
-Description=GnX Linux resilience workload (Podman Quadlet)
+Description=GnX Mesh resilience workload (Podman Quadlet)
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=0
 
 [Container]
 Image=$image
-ContainerName=gnx-linux
+ContainerName=gnx-mesh
 Network=none
 ReadOnly=true
-Tmpfs=/run/gnx-linux:rw,noexec,nosuid,nodev,size=1m
-Exec=/bin/sh -ec 'while :; do printf "{\\"service\\":\\"gnx-linux\\",\\"state\\":\\"running\\",\\"updatedAt\\":\\"%s\\"}\\n" "\$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /run/gnx-linux/heartbeat.json; sleep 30; done'
+Tmpfs=/run/gnx-mesh:rw,noexec,nosuid,nodev,size=1m
+Exec=/bin/sh -ec 'while :; do printf "{\\"service\\":\\"gnx-mesh\\",\\"state\\":\\"running\\",\\"updatedAt\\":\\"%s\\"}\\n" "\$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /run/gnx-mesh/heartbeat.json; sleep 30; done'
 
 [Service]
 Restart=always
@@ -54,5 +54,5 @@ WantedBy=multi-user.target
 UNIT
 
 systemctl daemon-reload
-systemctl enable --now gnx-linux.service
-systemctl is-active --quiet gnx-linux.service
+systemctl enable --now gnx-mesh.service
+systemctl is-active --quiet gnx-mesh.service

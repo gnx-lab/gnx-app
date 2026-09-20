@@ -56,7 +56,7 @@ En consola, el monitor puede ejecutarse con `--console` usando su `appsettings.j
 .\installer\build-installer.ps1 -AppUrl http://localhost:8080/
 ```
 
-El script compila el binario Rust, copia `appsettings.json`, genera el MSI con WiX y registra `GnxAppMonitor` cuando se usa `IncludeService=1`.
+El script compila el binario Rust, copia `appsettings.json`, genera el MSI con WiX y registra `GnxMeshMonitor` cuando se usa `IncludeService=1`.
 
 ## Checklist de salida
 

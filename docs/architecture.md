@@ -13,7 +13,7 @@ permalink: /architecture/
 Navegador
   └─ PWA local (index.html + app.js + Service Worker)
        └─ GET http://127.0.0.1:17890/status
-            └─ GnxAppMonitor (Rust / Windows Service)
+            └─ GnxMeshMonitor (Rust / Windows Service)
                  └─ GET a la URL configurada
 ```
 

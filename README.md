@@ -31,7 +31,7 @@ Abre `http://localhost:8080/`. El estado del servicio, si está instalado, está
 .\installer\build-installer.ps1 -AppUrl http://localhost:8080/
 ```
 
-El MSI instala accesos locales y el servicio `GnxAppMonitor`. Revisa [desarrollo y despliegue](docs/deployment.md) y [control del instalable](docs/installer-worklog.md) antes de distribuirlo.
+El MSI instala accesos locales y el servicio `GnxMeshMonitor`. Revisa [desarrollo y despliegue](docs/deployment.md) y [control del instalable](docs/installer-worklog.md) antes de distribuirlo.
 
 ## Flujo de producto histórico y futuro
 

@@ -1,6 +1,6 @@
 # Instalador Windows de GnX App
 
-El instalador WiX 5 contiene la PWA como acceso y el servicio local `GnxAppMonitor`. El servicio reconcilia un usuario dedicado, WSL Ubuntu 24.04 y un Quadlet Podman; no instala backend de GnX, navegador ni proxy.
+El instalador WiX 5 contiene la PWA como acceso y el servicio local `GnxMeshMonitor`. El servicio reconcilia un usuario dedicado, WSL Ubuntu 24.04 y un Quadlet Podman; no instala backend de GnX, navegador ni proxy.
 
 ## Requisitos
 
@@ -22,10 +22,10 @@ El script compila el servicio Rust self-contained y genera `installer/bin/Debug/
 ## Qué instala
 
 - Acceso de Inicio y escritorio a la URL local configurada.
-- Servicio automático `GnxAppMonitor`.
+- Servicio automático `GnxMeshMonitor`.
 - Endpoint local `http://127.0.0.1:17890/status`.
-- Usuario Windows dedicado `gnxsvc`, creado solo cuando no hay conflicto de ownership.
-- WSL2 con `Ubuntu-24.04`, systemd y `gnx-linux.service` generado desde un Podman Quadlet.
+- Usuario Windows dedicado `gnxmeshsvc`, creado solo cuando no hay conflicto de ownership.
+- WSL2 con base `Ubuntu-24.04` registrada como `gnx-mesh`, systemd y `gnx-mesh.service` generado desde un Podman Quadlet.
 
 El servicio Rust realiza comprobaciones básicas de la URL configurada, `manifest.webmanifest` y `sw.js`. También reconcilia WSL y el Quadlet cada 120 segundos, expone ese estado por loopback y usa una credencial DPAPI con ACL exclusiva para SYSTEM/Administrators.
 
@@ -34,10 +34,10 @@ El servicio Rust realiza comprobaciones básicas de la URL configurada, `manifes
 ## Pruebas
 
 ```powershell
-Get-Service GnxAppMonitor
+Get-Service GnxMeshMonitor
 Invoke-WebRequest http://127.0.0.1:17890/status
-Get-Content 'C:\ProgramData\GnX App Monitor\provisioning.json' -Raw
-wsl -d Ubuntu-24.04 -u root -- systemctl is-active gnx-linux.service
+Get-Content 'C:\ProgramData\GnX Mesh\provisioning.json' -Raw
+wsl -d gnx-mesh -u root -- systemctl is-active gnx-mesh.service
 ```
 
 Para quitar el producto usa **Aplicaciones instaladas de Windows** o el MSI registrado. No se deben subir el MSI, `bin/`, `obj/` ni `publish/` al repositorio.

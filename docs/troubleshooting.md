@@ -17,7 +17,7 @@ permalink: /troubleshooting/
 ## La fila «Servicio local» dice «No conectado»
 
 ```powershell
-Get-Service GnxAppMonitor -ErrorAction SilentlyContinue
+Get-Service GnxMeshMonitor -ErrorAction SilentlyContinue
 Invoke-WebRequest http://127.0.0.1:17890/status -TimeoutSec 3
 ```
 

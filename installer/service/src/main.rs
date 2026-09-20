@@ -24,7 +24,7 @@ use windows_service::{
     service_dispatcher,
 };
 
-const SERVICE_NAME: &str = "GnxAppMonitor";
+const SERVICE_NAME: &str = "GnxMeshMonitor";
 const STATUS_CONTENT_TYPE: &str = "application/json; charset=utf-8";
 
 type SharedStatus = Arc<Mutex<Status>>;
@@ -61,7 +61,7 @@ impl Default for ProvisioningConfig {
             enabled: true,
             interval_seconds: 120,
             auto_reboot: true,
-            state_path: r"C:\ProgramData\GnX App Monitor\provisioning.json".into(),
+            state_path: r"C:\ProgramData\GnX Mesh\provisioning.json".into(),
         }
     }
 }
@@ -73,6 +73,8 @@ struct ProvisioningState {
     code: String,
     message: String,
     reboot_pending: bool,
+    service_user: String,
+    distribution: String,
     linux_service: String,
     last_attempt: Option<String>,
     last_error: Option<String>,
@@ -91,6 +93,8 @@ struct Status {
     provisioning_code: String,
     provisioning_message: String,
     provisioning_reboot_pending: bool,
+    dedicated_user: String,
+    wsl_distribution: String,
     linux_service: String,
     provisioning_checked_at: u64,
     provisioning_last_attempt: Option<String>,
@@ -155,7 +159,7 @@ fn stopped_status() -> ServiceStatus {
 
 fn config() -> ConfigFile {
     let path = env::current_exe()
-        .unwrap_or_else(|_| PathBuf::from("GnxAppMonitor.exe"))
+        .unwrap_or_else(|_| PathBuf::from("gnx-mesh-monitor.exe"))
         .with_file_name("appsettings.json");
     let text = fs::read_to_string(&path)
         .unwrap_or_else(|error| panic!("cannot read {}: {error}", path.display()));
@@ -172,6 +176,8 @@ fn run(settings: ConfigFile, stop: Arc<AtomicBool>) {
         provisioning_phase: "NOT_STARTED".into(),
         provisioning_code: "NOT_STARTED".into(),
         provisioning_message: "The WSL/Quadlet reconciler has not run yet.".into(),
+        dedicated_user: "gnxmeshsvc".into(),
+        wsl_distribution: "gnx-mesh".into(),
         linux_service: "unknown".into(),
         ..Status::default()
     }));
@@ -241,7 +247,7 @@ fn run_provisioner(settings: ProvisioningConfig, state: SharedStatus, stop: Arc<
 
 fn reconcile_wsl(settings: &ProvisioningConfig, state: &SharedStatus) {
     let script = env::current_exe()
-        .unwrap_or_else(|_| PathBuf::from("gnx-app-monitor.exe"))
+        .unwrap_or_else(|_| PathBuf::from("gnx-mesh-monitor.exe"))
         .with_file_name("provision-wsl.ps1");
     if !script.exists() {
         update_provisioning_status(
@@ -288,6 +294,12 @@ fn update_provisioning_status(state: &SharedStatus, provisioned: ProvisioningSta
         current.provisioning_code = provisioned.code;
         current.provisioning_message = provisioned.message;
         current.provisioning_reboot_pending = provisioned.reboot_pending;
+        if !provisioned.service_user.is_empty() {
+            current.dedicated_user = provisioned.service_user;
+        }
+        if !provisioned.distribution.is_empty() {
+            current.wsl_distribution = provisioned.distribution;
+        }
         current.linux_service = provisioned.linux_service;
         current.provisioning_last_attempt = provisioned.last_attempt;
         current.provisioning_last_error = provisioned.last_error;

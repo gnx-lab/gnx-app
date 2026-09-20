@@ -27,7 +27,7 @@ La respuesta incluye el estado del servicio, la URL comprobada, la disponibilida
 
 ```powershell
 Invoke-WebRequest http://127.0.0.1:17890/status | Select-Object -Expand Content
-Get-Service GnxAppMonitor
+Get-Service GnxMeshMonitor
 ```
 
 El monitor realiza comprobaciones periódicas de la URL configurada. Además reconcilia WSL, Ubuntu 24.04 y el Quadlet de Podman cada 120 s. Configura `AppUrl`, `IntervalSeconds`, `RequestTimeoutSeconds` y `ListenPort` en `installer/service/appsettings.json` o durante el build; no pongas secretos en ese archivo. Consulta el [tracking WSL y Quadlet]({{ '/wsl-quadlet-tracking/' | relative_url }}) antes de instalarlo en un host real.

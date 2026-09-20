@@ -118,7 +118,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gnx-app-monitor"
+name = "gnx-mesh-monitor"
 version = "0.1.0"
 dependencies = [
  "ctrlc",

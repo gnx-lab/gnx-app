@@ -11,7 +11,7 @@ permalink: /resources/
 
 <a href="https://gnx-obsidiana.mayas-alas-yx.chatgpt.site/" target="_blank" rel="noopener noreferrer">Abrir gnx-obsidiana.mayas-alas-yx.chatgpt.site ↗</a>
 
-Este sitio externo se incorpora como referencia de exploración y lenguaje de producto. No es una API de GnX App, no recibe el estado de `GnxAppMonitor`, no autentica esta documentación y no debe tratarse como una dependencia de build o runtime.
+Este sitio externo se incorpora como referencia de exploración y lenguaje de producto. No es una API de GnX App, no recibe el estado de `GnxMeshMonitor`, no autentica esta documentación y no debe tratarse como una dependencia de build o runtime.
 
 ## Referencia editorial
 

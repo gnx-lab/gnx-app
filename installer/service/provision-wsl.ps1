@@ -2,18 +2,20 @@
 param(
   [ValidateSet('Plan', 'Reconcile')]
   [string]$Mode = 'Reconcile',
-  [string]$StatePath = 'C:\ProgramData\GnX App Monitor\provisioning.json',
-  [string]$ServiceUser = 'gnxsvc',
-  [string]$Distribution = 'Ubuntu-24.04',
+  [string]$StatePath = 'C:\ProgramData\GnX Mesh\provisioning.json',
+  [string]$ServiceUser = 'gnxmeshsvc',
+  [string]$Distribution = 'gnx-mesh',
+  [string]$UbuntuDistribution = 'Ubuntu-24.04',
+  [string]$InstallLocation = 'C:\ProgramData\GnX Mesh\wsl',
   [string]$LinuxInstallPath = '',
   [switch]$AutoReboot
 )
 
 $ErrorActionPreference = 'Stop'
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-if (-not $LinuxInstallPath) { $LinuxInstallPath = Join-Path $scriptRoot 'linux\install-linux-service.sh' }
+if (-not $LinuxInstallPath) { $LinuxInstallPath = Join-Path $scriptRoot 'linux\install-gnx-mesh-quadlet.sh' }
 $stateDirectory = Split-Path -Parent $StatePath
-$credentialPath = Join-Path $stateDirectory 'gnxsvc.credential.xml'
+$credentialPath = Join-Path $stateDirectory 'gnxmeshsvc.credential.xml'
 $bootId = ''
 
 function New-DefaultState {
@@ -24,6 +26,8 @@ function New-DefaultState {
     message = 'Provisioning has not run yet.'
     serviceUser = $ServiceUser
     distribution = $Distribution
+    ubuntuDistribution = $UbuntuDistribution
+    installLocation = $InstallLocation
     rebootPending = $false
     rebootBootId = $null
     attempts = 0
@@ -110,7 +114,7 @@ function Ensure-DedicatedUser([hashtable]$Value) {
     Stop-Blocked $Value 'LOCAL_ACCOUNTS_UNAVAILABLE' 'The LocalAccounts PowerShell module is unavailable.'
   }
 
-  if ($existing -and $existing.Description -notlike 'GnX managed WSL account*') {
+  if ($existing -and $existing.Description -notlike 'GnX Mesh managed WSL account*') {
     Stop-Blocked $Value 'DEDICATED_USER_CONFLICT' "The local user '$ServiceUser' already exists and is not owned by GnX."
   }
 
@@ -118,7 +122,7 @@ function Ensure-DedicatedUser([hashtable]$Value) {
   if (-not $existing) {
     $password = New-RandomPassword
     $secure = ConvertTo-SecureString $password -AsPlainText -Force
-    New-LocalUser -Name $ServiceUser -Password $secure -Description 'GnX managed WSL account' `
+    New-LocalUser -Name $ServiceUser -Password $secure -Description 'GnX Mesh managed WSL account' `
       -AccountNeverExpires -PasswordNeverExpires -UserMayNotChangePassword | Out-Null
   } elseif (-not (Test-Path -LiteralPath $credentialPath)) {
     $password = New-RandomPassword
@@ -212,7 +216,7 @@ function Schedule-HostReboot([hashtable]$Value, [string]$Reason) {
 function Ensure-LinuxService([hashtable]$Value) {
   $listed = Invoke-WslAsDedicatedUser @('-l', '-q')
   if ($listed.ExitCode -ne 0 -or $listed.Stdout -notmatch [regex]::Escape($Distribution)) {
-    $install = Invoke-WslAsDedicatedUser @('--install', '--distribution', $Distribution, '--no-launch')
+    $install = Invoke-WslAsDedicatedUser @('--install', $UbuntuDistribution, '--name', $Distribution, '--location', $InstallLocation, '--version', '2', '--no-launch', '--web-download')
     if ($install.ExitCode -notin @(0, 3010)) {
       Stop-Blocked $Value 'WSL_INSTALL_FAILED' ("Ubuntu installation failed: " + $install.Stderr.Trim())
     }
@@ -241,10 +245,10 @@ function Ensure-LinuxService([hashtable]$Value) {
     Stop-Blocked $Value 'LINUX_SERVICE_INSTALL_FAILED' ("Linux service installation failed: " + $installLinux.Stderr.Trim())
   }
 
-  $check = Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'is-active', '--quiet', 'gnx-linux.service')
+  $check = Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'is-active', '--quiet', 'gnx-mesh.service')
   if ($check.ExitCode -ne 0) {
-    Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'restart', 'gnx-linux.service') | Out-Null
-    $check = Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'is-active', '--quiet', 'gnx-linux.service')
+    Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'restart', 'gnx-mesh.service') | Out-Null
+    $check = Invoke-WslAsDedicatedUser @('-d', $Distribution, '-u', 'root', '--', 'systemctl', 'is-active', '--quiet', 'gnx-mesh.service')
   }
   if ($check.ExitCode -ne 0) {
     Stop-Blocked $Value 'LINUX_SERVICE_DOWN' 'The Linux service is not active after reconciliation.' @{ linuxService = 'down' }
@@ -280,5 +284,5 @@ $requiresReboot = Enable-HostVirtualization $state
 Ensure-DedicatedUser $state
 if ($requiresReboot) { Schedule-HostReboot $state 'Windows WSL and VirtualMachinePlatform features require a host restart.' }
 Ensure-LinuxService $state
-Set-State $state 'READY' 'PROVISIONED' 'Dedicated user, WSL Ubuntu and the resilient Linux service are ready.' @{ rebootPending = $false; rebootBootId = $null; linuxService = 'running' }
+Set-State $state 'READY' 'PROVISIONED' 'GnX Mesh user, branded Ubuntu WSL distribution and Podman Quadlet are ready.' @{ rebootPending = $false; rebootBootId = $null; linuxService = 'running' }
 exit 0

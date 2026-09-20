@@ -3,7 +3,7 @@
       xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="GnX App"
            Manufacturer="GnX App"
-           Version="1.0.0.0"
+           Version="1.1.0.0"
            UpgradeCode="6F3B7C5D-3C43-4EE4-A9E0-2AF7F45E4A1A"
            Scope="$(var.InstallScope)">
     <SummaryInformation Description="Accesos de Windows para GnX App" />
@@ -57,25 +57,25 @@
   <?if $(var.IncludeService) = 1 ?>
   <Fragment>
     <StandardDirectory Id="ProgramFilesFolder">
-      <Directory Id="MONITORFOLDER" Name="GnX App Monitor">
+      <Directory Id="MONITORFOLDER" Name="GnX Mesh Monitor">
         <Directory Id="MONITORLINUXFOLDER" Name="linux" />
       </Directory>
     </StandardDirectory>
     <ComponentGroup Id="MonitorServicePayload" Directory="MONITORFOLDER">
       <Component Id="MonitorService" Guid="A31DCE86-7A6F-4C0E-9BE7-8E3D8D6F3A42">
-        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\gnx-app-monitor.exe" KeyPath="yes" />
+        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\gnx-mesh-monitor.exe" KeyPath="yes" />
         <File Id="MonitorSettings" Source="$(var.ServicePayloadDir)\appsettings.json" />
         <File Id="WslProvisioner" Source="$(var.ServicePayloadDir)\provision-wsl.ps1" />
-        <ServiceInstall Id="MonitorServiceInstall" Name="GnxAppMonitor" DisplayName="GnX App Monitor"
+        <ServiceInstall Id="MonitorServiceInstall" Name="GnxMeshMonitor" DisplayName="GnX Mesh Monitor"
                         Description="Reconciles GnX PWA availability, WSL Ubuntu and its Podman Quadlet."
                         Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
-        <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
-        <util:ServiceConfig ServiceName="GnxAppMonitor" FirstFailureActionType="restart"
+        <ServiceControl Id="MonitorServiceControl" Name="GnxMeshMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
+        <util:ServiceConfig ServiceName="GnxMeshMonitor" FirstFailureActionType="restart"
                             SecondFailureActionType="restart" ThirdFailureActionType="restart"
                             RestartServiceDelayInSeconds="30" ResetPeriodInDays="1" />
       </Component>
       <Component Id="LinuxProvisionPayload" Directory="MONITORLINUXFOLDER" Guid="4C52EDB2-6A86-4D07-B9EF-148E436EAB4C">
-        <File Id="LinuxQuadletInstaller" Source="$(var.ServicePayloadDir)\linux\install-linux-service.sh" KeyPath="yes" />
+        <File Id="LinuxQuadletInstaller" Source="$(var.ServicePayloadDir)\linux\install-gnx-mesh-quadlet.sh" KeyPath="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>

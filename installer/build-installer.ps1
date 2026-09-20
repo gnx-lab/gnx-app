@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Remove-Item $publish -Recurse -Force -ErrorAction SilentlyContinue
 New-Item $publish -ItemType Directory | Out-Null
-Copy-Item (Join-Path $service "target/$Target/release/gnx-app-monitor.exe") (Join-Path $publish "gnx-app-monitor.exe")
+Copy-Item (Join-Path $service "target/$Target/release/gnx-mesh-monitor.exe") (Join-Path $publish "gnx-mesh-monitor.exe")
 Copy-Item (Join-Path $service "provision-wsl.ps1") (Join-Path $publish "provision-wsl.ps1")
 Copy-Item (Join-Path $service "linux") (Join-Path $publish "linux") -Recurse
 $configPath = Join-Path $publish "appsettings.json"
