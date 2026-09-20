@@ -1,0 +1,29 @@
+**/bin/
+**/obj/
+*.msi
+*.wixpdb
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs, temporales y resultados locales
+*.log
+*.tmp
+*.temp
+_site/
+dist/
+
+# Configuración local: nunca subir credenciales o tokens
+.env
+.env.*
+!.env.example
+*.local
+
+# Credenciales y certificados privados
+*.pem
+*.key
+*.pfx
+*.p12

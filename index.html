@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>GnX App</title>
+  <link rel="icon" href="assets/tray-icon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/branding-install-logo.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <section class="card" aria-labelledby="appTitle">
+      <img class="hero" src="assets/tray-icon.png" alt="Icono de GnX App">
+      <span id="modeBadge" class="badge">Cargando</span>
+      <h1 id="appTitle">GnX App</h1>
+      <p id="intro">Comprobando el entorno de ejecución.</p>
+
+      <section class="panel" aria-live="polite">
+        <div class="row"><span>Sesión</span><strong id="sessionState">No iniciada</strong></div>
+        <div class="row"><span>PWA</span><strong id="pwaState">No verificada</strong></div>
+        <div class="row private-only"><span>Fuentes</span><strong id="sourcesState">No comprobadas</strong></div>
+      </section>
+
+      <div class="actions">
+        <button id="sessionBtn" type="button">Generar sesión</button>
+        <button id="installBtn" type="button" hidden>Instalar PWA</button>
+        <button id="verifyBtn" class="ghost" type="button">Verificar instalación</button>
+      </div>
+
+      <label id="handoffLabel" class="handoff" hidden>
+        Código de sesión para localhost
+        <input id="handoffCode" readonly aria-label="Código de sesión">
+      </label>
+      <p id="status" class="status" role="status">Listo.</p>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

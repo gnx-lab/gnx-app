@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="GnX App"
+           Manufacturer="GnX App"
+           Version="1.0.0.0"
+           UpgradeCode="6F3B7C5D-3C43-4EE4-A9E0-2AF7F45E4A1A"
+           Scope="$(var.InstallScope)">
+    <SummaryInformation Description="Accesos de Windows para GnX App" />
+    <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más reciente instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- AppUrl se puede sobreescribir por build; por defecto apunta a la instalación publicada. -->
+    <Property Id="APP_URL" Value="$(var.AppUrl)" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="GnX App" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="APPLICATION_PROGRAMS_FOLDER" Name="GnX App" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="MainFeature" Title="GnX App" Level="1">
+      <ComponentRef Id="InstallMarker" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <?if $(var.IncludeService) = 1 ?>
+      <ComponentGroupRef Id="MonitorServicePayload" />
+      <?endif?>
+    </Feature>
+
+    <Component Id="InstallMarker" Directory="INSTALLFOLDER" Guid="A1E6C4B8-7D23-4F90-8B5A-2C9D0E731F64">
+      <RegistryValue Root="HKCU" Key="Software\GnxApp" Name="InstallPath"
+                     Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      <RemoveFile Id="RemoveInstallFolderFiles" Directory="INSTALLFOLDER" Name="*.*" On="uninstall" />
+      <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+    </Component>
+
+    <Component Id="StartMenuShortcut" Directory="APPLICATION_PROGRAMS_FOLDER" Guid="8B3A9C1E-2F6D-4A70-B5C4-91E7D8F20316">
+      <util:InternetShortcut Id="StartMenuUrl" Name="GnX App"
+                             Target="[APP_URL]" />
+      <RegistryValue Root="HKCU" Key="Software\GnxApp\Shortcuts" Name="StartMenu"
+                     Type="string" Value="[APPLICATION_PROGRAMS_FOLDER]" KeyPath="yes" />
+      <RemoveFile Id="RemoveStartMenuFolderFiles" Directory="APPLICATION_PROGRAMS_FOLDER" Name="*.*" On="uninstall" />
+      <RemoveFolder Id="RemoveStartMenuFolder" On="uninstall" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="D4F0A7B2-6C19-4E83-9A5D-37C8B1E6042F">
+      <util:InternetShortcut Id="DesktopUrl" Name="GnX App"
+                             Target="[APP_URL]" />
+      <RegistryValue Root="HKCU" Key="Software\GnxApp\Shortcuts" Name="Desktop"
+                     Type="string" Value="[DesktopFolder]" KeyPath="yes" />
+    </Component>
+  </Package>
+
+  <?if $(var.IncludeService) = 1 ?>
+  <Fragment>
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="MONITORFOLDER" Name="GnX App Monitor" />
+    </StandardDirectory>
+    <ComponentGroup Id="MonitorServicePayload" Directory="MONITORFOLDER">
+      <Component Id="MonitorService" Guid="*">
+        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\GnxAppMonitor.exe" KeyPath="yes" />
+        <File Id="MonitorSettings" Source="$(var.ServicePayloadDir)\appsettings.json" />
+        <ServiceInstall Id="MonitorServiceInstall" Name="GnxAppMonitor" DisplayName="GnX App Monitor"
+                        Description="Checks GnX App availability and an optional local install manifest."
+                        Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
+        <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <?endif?>
+</Wix>

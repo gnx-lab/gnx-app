@@ -1,0 +1,18 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <OutputName>GnxAppSetup</OutputName>
+    <AppUrl Condition="'$(AppUrl)' == ''">https://app.gnx</AppUrl>
+    <DefineConstants>AppUrl=$(AppUrl)</DefineConstants>
+    <!-- The service payload is opt-in because publish output is not committed. -->
+    <IncludeService Condition="'$(IncludeService)' == ''">0</IncludeService>
+    <ServicePayloadDir Condition="'$(ServicePayloadDir)' == ''">$(MSBuildProjectDirectory)\service\publish</ServicePayloadDir>
+    <InstallScope Condition="'$(InstallScope)' == ''">perUser</InstallScope>
+    <DefineConstants>$(DefineConstants);IncludeService=$(IncludeService);ServicePayloadDir=$(ServicePayloadDir);InstallScope=$(InstallScope)</DefineConstants>
+    <!-- El MSI solo contiene accesos; ICE71 no aplica porque no hay entradas Media. -->
+    <SuppressIces>ICE71</SuppressIces>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+</Project>
