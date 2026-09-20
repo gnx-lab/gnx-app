@@ -57,16 +57,25 @@
   <?if $(var.IncludeService) = 1 ?>
   <Fragment>
     <StandardDirectory Id="ProgramFilesFolder">
-      <Directory Id="MONITORFOLDER" Name="GnX App Monitor" />
+      <Directory Id="MONITORFOLDER" Name="GnX App Monitor">
+        <Directory Id="MONITORLINUXFOLDER" Name="linux" />
+      </Directory>
     </StandardDirectory>
     <ComponentGroup Id="MonitorServicePayload" Directory="MONITORFOLDER">
       <Component Id="MonitorService" Guid="A31DCE86-7A6F-4C0E-9BE7-8E3D8D6F3A42">
         <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\gnx-app-monitor.exe" KeyPath="yes" />
         <File Id="MonitorSettings" Source="$(var.ServicePayloadDir)\appsettings.json" />
+        <File Id="WslProvisioner" Source="$(var.ServicePayloadDir)\provision-wsl.ps1" />
         <ServiceInstall Id="MonitorServiceInstall" Name="GnxAppMonitor" DisplayName="GnX App Monitor"
-                        Description="Checks GnX App availability for the local PWA."
+                        Description="Reconciles GnX PWA availability, WSL Ubuntu and its Podman Quadlet."
                         Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
         <ServiceControl Id="MonitorServiceControl" Name="GnxAppMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
+        <util:ServiceConfig ServiceName="GnxAppMonitor" FirstFailureActionType="restart"
+                            SecondFailureActionType="restart" ThirdFailureActionType="restart"
+                            RestartServiceDelayInSeconds="30" ResetPeriodInDays="1" />
+      </Component>
+      <Component Id="LinuxProvisionPayload" Directory="MONITORLINUXFOLDER" Guid="4C52EDB2-6A86-4D07-B9EF-148E436EAB4C">
+        <File Id="LinuxQuadletInstaller" Source="$(var.ServicePayloadDir)\linux\install-linux-service.sh" KeyPath="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>

@@ -24,6 +24,8 @@
       url: /deployment/
     - title: Instalador Windows
       url: /installer-worklog/
+    - title: Tracking WSL y Quadlet
+      url: /wsl-quadlet-tracking/
 - title: Contexto
   items:
     - title: Auditoría de la documentación

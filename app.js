@@ -62,8 +62,22 @@ async function checkService() {
     if (!response.ok) throw new Error("service status failed");
     const state = await response.json();
     const checks = [state.serviceRunning, state.urlAvailable, state.manifestAvailable, state.serviceWorkerAvailable];
-    serviceState.textContent = checks.every(Boolean) ? "Correcto" : "Revisar URL";
-    setStatus(checks.every(Boolean) ? "Servicio local y PWA disponibles." : "El servicio responde; alguna comprobación de la URL necesita atención.");
+    const provisioningReady = state.provisioningPhase === "READY" || state.provisioningCode === "PROVISIONED";
+    const linuxReady = provisioningReady && state.linuxService === "running";
+    const rebootPending = state.provisioningRebootPending || ["REBOOT_REQUIRED", "REBOOT_PENDING"].includes(state.provisioningCode);
+    if (rebootPending) {
+      serviceState.textContent = "Reinicio requerido";
+      setStatus("El servicio preparó WSL; Windows debe reiniciarse para continuar.");
+    } else if (linuxReady && checks.every(Boolean)) {
+      serviceState.textContent = "WSL/Quadlet correcto";
+      setStatus("Servicio Windows, PWA y servicio Linux Quadlet disponibles.");
+    } else if (["BLOCKED", "RECOVERY_REQUIRED"].includes(state.provisioningPhase)) {
+      serviceState.textContent = `WSL bloqueado · ${state.provisioningCode || "revisar"}`;
+      setStatus(state.provisioningMessage || "El reconciliador WSL requiere atención administrativa.");
+    } else {
+      serviceState.textContent = checks.every(Boolean) ? "Preparando WSL" : "Revisar URL/WSL";
+      setStatus(state.provisioningMessage || "El servicio responde; alguna comprobación requiere atención.");
+    }
   } catch {
     serviceState.textContent = "No conectado";
     setStatus("No se encontró el servicio local en 127.0.0.1:17890.");

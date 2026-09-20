@@ -21,6 +21,8 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Remove-Item $publish -Recurse -Force -ErrorAction SilentlyContinue
 New-Item $publish -ItemType Directory | Out-Null
 Copy-Item (Join-Path $service "target/$Target/release/gnx-app-monitor.exe") (Join-Path $publish "gnx-app-monitor.exe")
+Copy-Item (Join-Path $service "provision-wsl.ps1") (Join-Path $publish "provision-wsl.ps1")
+Copy-Item (Join-Path $service "linux") (Join-Path $publish "linux") -Recurse
 $configPath = Join-Path $publish "appsettings.json"
 $config = Get-Content (Join-Path $service "appsettings.json") -Raw | ConvertFrom-Json
 $config.Monitor.AppUrl = $AppUrl
@@ -32,4 +34,4 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
   -p:ServicePayloadDir=$publish
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host "MSI generado con el servicio Rust incluido. Ejecuta como administrador para instalarlo."
+Write-Host "MSI generado con el servicio Rust, el reconciliador WSL y el Quadlet de Podman. Ejecuta como administrador para instalarlo; el reinicio del host puede programarse tras la instalación."

@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
     env, fs,
+    process::Command,
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -32,6 +33,8 @@ type SharedStatus = Arc<Mutex<Status>>;
 #[serde(rename_all = "PascalCase")]
 struct ConfigFile {
     monitor: MonitorConfig,
+    #[serde(default)]
+    provisioning: ProvisioningConfig,
 }
 
 #[derive(Clone, Deserialize)]
@@ -43,6 +46,38 @@ struct MonitorConfig {
     listen_port: u16,
 }
 
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct ProvisioningConfig {
+    enabled: bool,
+    interval_seconds: u64,
+    auto_reboot: bool,
+    state_path: String,
+}
+
+impl Default for ProvisioningConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            interval_seconds: 120,
+            auto_reboot: true,
+            state_path: r"C:\ProgramData\GnX App Monitor\provisioning.json".into(),
+        }
+    }
+}
+
+#[derive(Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProvisioningState {
+    phase: String,
+    code: String,
+    message: String,
+    reboot_pending: bool,
+    linux_service: String,
+    last_attempt: Option<String>,
+    last_error: Option<String>,
+}
+
 #[derive(Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Status {
@@ -52,6 +87,14 @@ struct Status {
     service_worker_available: bool,
     app_url: String,
     checked_at: u64,
+    provisioning_phase: String,
+    provisioning_code: String,
+    provisioning_message: String,
+    provisioning_reboot_pending: bool,
+    linux_service: String,
+    provisioning_checked_at: u64,
+    provisioning_last_attempt: Option<String>,
+    provisioning_last_error: Option<String>,
 }
 
 fn main() {
@@ -110,7 +153,7 @@ fn stopped_status() -> ServiceStatus {
     }
 }
 
-fn config() -> MonitorConfig {
+fn config() -> ConfigFile {
     let path = env::current_exe()
         .unwrap_or_else(|_| PathBuf::from("GnxAppMonitor.exe"))
         .with_file_name("appsettings.json");
@@ -118,28 +161,37 @@ fn config() -> MonitorConfig {
         .unwrap_or_else(|error| panic!("cannot read {}: {error}", path.display()));
     serde_json::from_str::<ConfigFile>(text.trim_start_matches('\u{feff}'))
         .unwrap_or_else(|error| panic!("cannot parse {}: {error}", path.display()))
-        .monitor
 }
 
-fn run(settings: MonitorConfig, stop: Arc<AtomicBool>) {
+fn run(settings: ConfigFile, stop: Arc<AtomicBool>) {
+    let monitor = settings.monitor;
+    let provisioning = settings.provisioning;
     let state = Arc::new(Mutex::new(Status {
         service_running: true,
-        app_url: settings.app_url.clone(),
+        app_url: monitor.app_url.clone(),
+        provisioning_phase: "NOT_STARTED".into(),
+        provisioning_code: "NOT_STARTED".into(),
+        provisioning_message: "The WSL/Quadlet reconciler has not run yet.".into(),
+        linux_service: "unknown".into(),
         ..Status::default()
     }));
     let server_state = Arc::clone(&state);
     let server_stop = Arc::clone(&stop);
-    let port = settings.listen_port;
+    let port = monitor.listen_port;
     let server_thread = thread::spawn(move || run_status_server(port, server_state, server_stop));
 
+    let provisioning_state = Arc::clone(&state);
+    let provisioning_stop = Arc::clone(&stop);
+    thread::spawn(move || run_provisioner(provisioning, provisioning_state, provisioning_stop));
+
     let agent = ureq::AgentBuilder::new()
-        .timeout_connect(Duration::from_secs(settings.request_timeout_seconds.max(1)))
-        .timeout_read(Duration::from_secs(settings.request_timeout_seconds.max(1)))
-        .timeout_write(Duration::from_secs(settings.request_timeout_seconds.max(1)))
+        .timeout_connect(Duration::from_secs(monitor.request_timeout_seconds.max(1)))
+        .timeout_read(Duration::from_secs(monitor.request_timeout_seconds.max(1)))
+        .timeout_write(Duration::from_secs(monitor.request_timeout_seconds.max(1)))
         .build();
 
     while !stop.load(Ordering::SeqCst) {
-        let base = settings.app_url.trim_end_matches('/');
+        let base = monitor.app_url.trim_end_matches('/');
         let app_url_available = check(&agent, base);
         let manifest = check(&agent, &format!("{base}/manifest.webmanifest"));
         let worker = check(&agent, &format!("{base}/sw.js"));
@@ -151,7 +203,7 @@ fn run(settings: MonitorConfig, stop: Arc<AtomicBool>) {
         }
         println!("url={app_url_available} manifest={manifest} service_worker={worker}");
 
-        for _ in 0..settings.interval_seconds.max(10) {
+        for _ in 0..monitor.interval_seconds.max(10) {
             if stop.load(Ordering::SeqCst) {
                 break;
             }
@@ -160,6 +212,87 @@ fn run(settings: MonitorConfig, stop: Arc<AtomicBool>) {
     }
 
     let _ = server_thread.join();
+}
+
+fn run_provisioner(settings: ProvisioningConfig, state: SharedStatus, stop: Arc<AtomicBool>) {
+    if !settings.enabled {
+        update_provisioning_status(
+            &state,
+            ProvisioningState {
+                phase: "DISABLED".into(),
+                code: "DISABLED".into(),
+                message: "WSL/Quadlet provisioning is disabled by configuration.".into(),
+                ..ProvisioningState::default()
+            },
+        );
+        return;
+    }
+
+    while !stop.load(Ordering::SeqCst) {
+        reconcile_wsl(&settings, &state);
+        for _ in 0..settings.interval_seconds.max(30) {
+            if stop.load(Ordering::SeqCst) {
+                return;
+            }
+            thread::sleep(Duration::from_secs(1));
+        }
+    }
+}
+
+fn reconcile_wsl(settings: &ProvisioningConfig, state: &SharedStatus) {
+    let script = env::current_exe()
+        .unwrap_or_else(|_| PathBuf::from("gnx-app-monitor.exe"))
+        .with_file_name("provision-wsl.ps1");
+    if !script.exists() {
+        update_provisioning_status(
+            state,
+            ProvisioningState {
+                phase: "BLOCKED".into(),
+                code: "PROVISIONER_MISSING".into(),
+                message: format!("Missing provisioning script: {}", script.display()),
+                ..ProvisioningState::default()
+            },
+        );
+        return;
+    }
+
+    let mut command = Command::new("powershell.exe");
+    command
+        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"])
+        .arg(&script)
+        .args(["-Mode", "Reconcile", "-StatePath"])
+        .arg(&settings.state_path);
+    if settings.auto_reboot {
+        command.arg("-AutoReboot");
+    }
+    let result = command.output();
+    let mut provisioned = fs::read_to_string(&settings.state_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<ProvisioningState>(&text).ok())
+        .unwrap_or_default();
+
+    if provisioned.phase.is_empty() {
+        provisioned.phase = "BLOCKED".into();
+        provisioned.code = "PROVISIONER_NO_STATE".into();
+        provisioned.message = match result {
+            Ok(output) => format!("Provisioner exited {} without valid state: {}", output.status, String::from_utf8_lossy(&output.stderr).trim()),
+            Err(error) => format!("Could not start the provisioning command: {error}"),
+        };
+    }
+    update_provisioning_status(state, provisioned);
+}
+
+fn update_provisioning_status(state: &SharedStatus, provisioned: ProvisioningState) {
+    if let Ok(mut current) = state.lock() {
+        current.provisioning_phase = provisioned.phase;
+        current.provisioning_code = provisioned.code;
+        current.provisioning_message = provisioned.message;
+        current.provisioning_reboot_pending = provisioned.reboot_pending;
+        current.linux_service = provisioned.linux_service;
+        current.provisioning_last_attempt = provisioned.last_attempt;
+        current.provisioning_last_error = provisioned.last_error;
+        current.provisioning_checked_at = now();
+    }
 }
 
 fn check(agent: &Agent, url: &str) -> bool {
