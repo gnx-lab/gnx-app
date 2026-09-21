@@ -1,0 +1,9 @@
+[package]
+name = "gnx-setup"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+gnx-control-protocol = { path = "../../crates/control-protocol" }
+serde_json.workspace = true
+uuid.workspace = true

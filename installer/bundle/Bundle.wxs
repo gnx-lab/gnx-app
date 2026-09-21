@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"><Bundle Name="GnX Node" Version="0.1.0.0" Manufacturer="GnX" UpgradeCode="B74D0B4D-4EC8-4986-96E5-9BD5A3B51A22"><BootstrapperApplication><bal:WixStandardBootstrapperApplication Theme="hyperlinkLicense" LicenseUrl="" /></BootstrapperApplication><Chain><MsiPackage SourceFile="$(var.MsiPath)" /></Chain></Bundle></Wix>

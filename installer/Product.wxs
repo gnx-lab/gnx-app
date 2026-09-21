@@ -1,83 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="GnX App"
-           Manufacturer="GnX App"
-           Version="1.1.0.0"
-           UpgradeCode="6F3B7C5D-3C43-4EE4-A9E0-2AF7F45E4A1A"
-           Scope="$(var.InstallScope)">
-    <SummaryInformation Description="Accesos de Windows para GnX App" />
-    <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más reciente instalada." />
-    <MediaTemplate EmbedCab="yes" />
-
-    <!-- AppUrl se puede sobreescribir por build; por defecto apunta a la PWA local. -->
-    <Property Id="APP_URL" Value="$(var.AppUrl)" />
-
-    <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="INSTALLFOLDER" Name="GnX App" />
-    </StandardDirectory>
-    <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="APPLICATION_PROGRAMS_FOLDER" Name="GnX App" />
-    </StandardDirectory>
-    <StandardDirectory Id="DesktopFolder" />
-
-    <Feature Id="MainFeature" Title="GnX App" Level="1">
-      <ComponentRef Id="InstallMarker" />
-      <ComponentRef Id="StartMenuShortcut" />
-      <ComponentRef Id="DesktopShortcut" />
-      <?if $(var.IncludeService) = 1 ?>
-      <ComponentGroupRef Id="MonitorServicePayload" />
-      <?endif?>
-    </Feature>
-
-    <Component Id="InstallMarker" Directory="INSTALLFOLDER" Guid="A1E6C4B8-7D23-4F90-8B5A-2C9D0E731F64">
-      <RegistryValue Root="HKCU" Key="Software\GnxApp" Name="InstallPath"
-                     Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
-      <RemoveFile Id="RemoveInstallFolderFiles" Directory="INSTALLFOLDER" Name="*.*" On="uninstall" />
-      <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
-    </Component>
-
-    <Component Id="StartMenuShortcut" Directory="APPLICATION_PROGRAMS_FOLDER" Guid="8B3A9C1E-2F6D-4A70-B5C4-91E7D8F20316">
-      <util:InternetShortcut Id="StartMenuUrl" Name="GnX App"
-                             Target="[APP_URL]" />
-      <RegistryValue Root="HKCU" Key="Software\GnxApp\Shortcuts" Name="StartMenu"
-                     Type="string" Value="[APPLICATION_PROGRAMS_FOLDER]" KeyPath="yes" />
-      <RemoveFile Id="RemoveStartMenuFolderFiles" Directory="APPLICATION_PROGRAMS_FOLDER" Name="*.*" On="uninstall" />
-      <RemoveFolder Id="RemoveStartMenuFolder" On="uninstall" />
-    </Component>
-
-    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="D4F0A7B2-6C19-4E83-9A5D-37C8B1E6042F">
-      <util:InternetShortcut Id="DesktopUrl" Name="GnX App"
-                             Target="[APP_URL]" />
-      <RegistryValue Root="HKCU" Key="Software\GnxApp\Shortcuts" Name="Desktop"
-                     Type="string" Value="[DesktopFolder]" KeyPath="yes" />
-    </Component>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="GnX Node" Manufacturer="GnX" Version="0.1.0.0" UpgradeCode="5EAA2C0C-1E4C-4E4D-89E5-3D6F1A7E4C11" Scope="perMachine">
+    <SummaryInformation Description="GnX Node host agent and local Setup" />
+    <MajorUpgrade DowngradeErrorMessage="A newer GnX Node is already installed." /><MediaTemplate EmbedCab="yes" />
+    <StandardDirectory Id="ProgramFilesFolder"><Directory Id="INSTALLFOLDER" Name="GnX Node" /></StandardDirectory>
+    <Feature Id="MainFeature" Title="GnX Node" Level="1"><ComponentRef Id="HostAgentComponent" /><ComponentRef Id="SetupComponent" /><ComponentRef Id="HostPayloadComponent" /></Feature>
   </Package>
-
-  <?if $(var.IncludeService) = 1 ?>
   <Fragment>
-    <StandardDirectory Id="ProgramFilesFolder">
-      <Directory Id="MONITORFOLDER" Name="GnX Mesh Monitor">
-        <Directory Id="MONITORLINUXFOLDER" Name="linux" />
-      </Directory>
-    </StandardDirectory>
-    <ComponentGroup Id="MonitorServicePayload" Directory="MONITORFOLDER">
-      <Component Id="MonitorService" Guid="A31DCE86-7A6F-4C0E-9BE7-8E3D8D6F3A42">
-        <File Id="MonitorExecutable" Source="$(var.ServicePayloadDir)\gnx-mesh-monitor.exe" KeyPath="yes" />
-        <File Id="MonitorSettings" Source="$(var.ServicePayloadDir)\appsettings.json" />
-        <File Id="WslProvisioner" Source="$(var.ServicePayloadDir)\provision-wsl.ps1" />
-        <ServiceInstall Id="MonitorServiceInstall" Name="GnxMeshMonitor" DisplayName="GnX Mesh Monitor"
-                        Description="Reconciles GnX PWA availability, WSL Ubuntu and its Podman Quadlet."
-                        Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" />
-        <ServiceControl Id="MonitorServiceControl" Name="GnxMeshMonitor" Start="install" Stop="both" Remove="uninstall" Wait="no" />
-        <util:ServiceConfig ServiceName="GnxMeshMonitor" FirstFailureActionType="restart"
-                            SecondFailureActionType="restart" ThirdFailureActionType="restart"
-                            RestartServiceDelayInSeconds="30" ResetPeriodInDays="1" />
-      </Component>
-      <Component Id="LinuxProvisionPayload" Directory="MONITORLINUXFOLDER" Guid="4C52EDB2-6A86-4D07-B9EF-148E436EAB4C">
-        <File Id="LinuxQuadletInstaller" Source="$(var.ServicePayloadDir)\linux\install-gnx-mesh-quadlet.sh" KeyPath="yes" />
-      </Component>
-    </ComponentGroup>
+    <Component Id="HostAgentComponent" Directory="INSTALLFOLDER" Guid="1BDFAC88-782B-4557-9FB3-A78AB16A8A11"><File Id="HostAgentExe" Source="$(var.HostAgentExe)" KeyPath="yes" /><ServiceInstall Id="HostAgentInstall" Name="GnXHostAgent" DisplayName="GnX Node Host Agent" Description="Privileged GnX Node operations over a secured Windows named pipe." Start="auto" Type="ownProcess" ErrorControl="normal" Account="LocalSystem" /><ServiceControl Id="HostAgentControl" Name="GnXHostAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" /></Component>
+    <Component Id="SetupComponent" Directory="INSTALLFOLDER" Guid="2C7EA97A-FA94-442A-9E7C-25C9D29A8D20"><File Id="SetupExe" Source="$(var.SetupExe)" KeyPath="yes" /><File Id="SetupUi" Source="$(var.SetupUi)" /></Component>
+    <Component Id="HostPayloadComponent" Directory="INSTALLFOLDER" Guid="3C5C0B88-1D34-45A3-8A29-C890E5213B33"><File Id="WslConfig" Source="$(var.HostPayload)\.wslconfig" KeyPath="yes" /></Component>
   </Fragment>
-  <?endif?>
 </Wix>
