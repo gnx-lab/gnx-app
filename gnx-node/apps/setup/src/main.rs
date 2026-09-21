@@ -22,29 +22,82 @@ fn locate_ui() -> std::path::PathBuf {
 
 #[cfg(windows)]
 fn launch_local_ui(path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::UI::Shell::ShellExecuteW;
-    let operation: Vec<u16> = std::ffi::OsStr::new("open")
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
-    let file: Vec<u16> = path
-        .as_os_str()
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
-    let result = unsafe {
-        ShellExecuteW(
-            std::ptr::null_mut(),
-            operation.as_ptr(),
-            file.as_ptr(),
-            std::ptr::null(),
-            std::ptr::null(),
-            1,
-        )
+    use std::borrow::Cow;
+    use tao::{
+        event::{Event, WindowEvent},
+        event_loop::{ControlFlow, EventLoop},
+        window::WindowBuilder,
     };
-    if result as isize <= 32 {
-        return Err(std::io::Error::last_os_error().into());
-    }
+    use wry::{
+        http::{Request, Response},
+        WebViewBuilder,
+    };
+    let ui_path = std::fs::canonicalize(path)?;
+    let ui_url = format!("file:///{}", ui_path.to_string_lossy().replace('\\', "/"));
+    let allowed_url = ui_url.clone();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_title("GnX Node Setup")
+        .build(&event_loop)?;
+    let webview = WebViewBuilder::new()
+        .with_custom_protocol("gnx".into(), |_, request: Request<Vec<u8>>| {
+            Response::builder()
+                .header("Content-Type", "application/json")
+                .header("Access-Control-Allow-Origin", "*")
+                .body(Cow::Owned(handle_bridge(request.body())))
+                .unwrap()
+        })
+        .with_navigation_handler(move |url| url == allowed_url || url.starts_with("gnx://"))
+        .with_url(&ui_url)
+        .build(&window)?;
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+        if let Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        } = event
+        {
+            *control_flow = ControlFlow::Exit;
+        }
+        let _ = &webview;
+    });
     Ok(())
+}
+
+#[cfg(windows)]
+fn handle_bridge(body: &[u8]) -> Vec<u8> {
+    use gnx_control_protocol::{Operation, Request, PROTOCOL_VERSION};
+    use serde::Deserialize;
+    use uuid::Uuid;
+    #[derive(Deserialize)]
+    struct BridgeRequest {
+        method: String,
+        tailscale_auth_key: Option<String>,
+    }
+    let result = (|| -> Result<Vec<u8>, String> {
+        let bridge: BridgeRequest = serde_json::from_slice(body).map_err(|e| e.to_string())?;
+        let operation = match bridge.method.as_str() {
+            "GetProgress" => Operation::GetProgress,
+            "Provision" => Operation::Provision,
+            "JoinMesh" => Operation::JoinMesh,
+            "Retry" => Operation::Retry,
+            "Cancel" => Operation::Cancel,
+            "Deprovision" => Operation::Deprovision,
+            _ => return Err("unsupported bridge method".into()),
+        };
+        if operation != Operation::JoinMesh && bridge.tailscale_auth_key.is_some() {
+            return Err("credentials are accepted only by JoinMesh".into());
+        }
+        let response = agent_client::request(&Request {
+            version: PROTOCOL_VERSION,
+            request_id: Uuid::new_v4(),
+            operation,
+            tailscale_auth_key: bridge.tailscale_auth_key,
+        })
+        .map_err(|e| e.to_string())?;
+        serde_json::to_vec(&response).map_err(|e| e.to_string())
+    })();
+    result.unwrap_or_else(|error| {
+        serde_json::to_vec(&serde_json::json!({"error": error})).unwrap_or_default()
+    })
 }
