@@ -19,6 +19,16 @@ pub fn state_dir() -> PathBuf {
     }
 }
 pub fn load() -> io::Result<Progress> {
+    let journal = state_dir().join("progress.jsonl");
+    if let Ok(text) = fs::read_to_string(&journal) {
+        if let Some(progress) = text
+            .lines()
+            .rev()
+            .find_map(|line| serde_json::from_str::<Progress>(line).ok())
+        {
+            return Ok(progress);
+        }
+    }
     let p = state_dir().join("progress.json");
     match fs::read(&p) {
         Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
@@ -31,9 +41,33 @@ pub fn save(progress: &Progress) -> io::Result<()> {
     fs::create_dir_all(&dir)?;
     let tmp = dir.join("progress.json.tmp");
     let dst = dir.join("progress.json");
-    let bytes = serde_json::to_vec_pretty(progress).map_err(io::Error::other)?;
+    let safe = sanitize(progress);
+    let bytes = serde_json::to_vec_pretty(&safe).map_err(io::Error::other)?;
     fs::write(&tmp, bytes)?;
-    fs::rename(tmp, dst)
+    fs::rename(tmp, dst).and_then(|_| {
+        use std::io::Write;
+        let mut journal = fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dir.join("progress.jsonl"))?;
+        serde_json::to_writer(&mut journal, &safe).map_err(io::Error::other)?;
+        journal.write_all(b"\n")
+    })
+}
+
+fn sanitize(progress: &Progress) -> Progress {
+    let mut safe = progress.clone();
+    safe.message = sanitize_text(&safe.message);
+    safe.error_code = safe.error_code.map(|value| sanitize_text(&value));
+    safe
+}
+
+fn sanitize_text(value: &str) -> String {
+    let mut output = value.replace("tskey-auth-", "[redacted-key]-");
+    for marker in ["password", "secret", "token"] {
+        output = output.replace(marker, "[redacted]");
+    }
+    output.chars().take(1024).collect()
 }
 pub fn initial() -> Progress {
     Progress {
